@@ -9,7 +9,10 @@ import yaml
 
 from Tensile.Common.Utilities import state
 from Tensile.Contractions import ProblemPredicate
-from Tensile.CustomKernels import getCustomKernelConfigAndAssembly, readCustomKernelConfig
+# _readEmbeddedYaml rather than readCustomKernelConfig: the ABI check below
+# needs the "amdhsa.kernels" side of the .amdgpu_metadata block, not the
+# "custom.config" side that the public reader narrows to.
+from Tensile.CustomKernels import _readEmbeddedYaml, readCustomKernelConfig
 
 pytestmark = pytest.mark.unit
 
@@ -42,8 +45,7 @@ def test_decode_selection_bounds(group, suffix):
 @pytest.mark.parametrize("group,suffix", [(32, "_W4")])
 def test_decode_universal_arguments_match_matrix_kernel(group, suffix):
     def metadata(name):
-        config, _ = getCustomKernelConfigAndAssembly(name, DIRECTORY)
-        return yaml.safe_load(config)["amdhsa.kernels"][0]
+        return _readEmbeddedYaml(name, DIRECTORY)["amdhsa.kernels"][0]
 
     decode, general = metadata(NAME.format(group=group, suffix=suffix)), metadata(GENERAL.format(group=group))
     # HIP compilation must preserve the universal layout that the existing
