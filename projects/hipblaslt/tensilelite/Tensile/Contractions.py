@@ -448,6 +448,8 @@ class ProblemType:
                 predicates.append(ProblemPredicate("DataTypeMXSB", value=self.mxTypeB))
         return predicates
 
+# develop removed this as dead code; the w4a16 AssertSizeEqual /
+# AssertSizeGreaterThan handling below is what gave it callers again.
 def extractDimPredicate(cls, key, value, predicateName):
     """
     Extract dimension-indexed predicates from an assertion dictionary.
@@ -460,6 +462,7 @@ def extractDimPredicate(cls, key, value, predicateName):
         return predicates[0]
     elif len(predicates) > 1:
         return cls.And(predicates)
+
 
 class TaskPredicate(Properties.Predicate):
     @classmethod

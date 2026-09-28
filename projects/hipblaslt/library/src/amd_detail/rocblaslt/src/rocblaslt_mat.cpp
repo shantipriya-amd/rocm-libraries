@@ -27,6 +27,7 @@
 #include "check_numerics_matrix.hpp"
 #include "definitions.h"
 #include "handle.h"
+#include "rocblaslt_fused_a2a_validate.hpp"
 #include "rocblaslt_mat_utils.hpp"
 #include "tensile_host.hpp"
 #include <array>
@@ -252,6 +253,19 @@ rocblaslt_status rocblaslt_matmul_impl(const rocblaslt_handle       handle,
     problem.streamKFlags  = streamKFlags;
     problem.int4EncodingA = matmul_descr->int4_encoding_a_ext;
 
+#if HIPBLASLT_HAS_GEMM_A2A_FUSION
+    problem.fused_epilogue      = matmul_descr->fused_epilogue;
+    problem.fused_a2a_world     = handle->device_comm_world;
+    problem.fused_a2a_rank      = handle->device_comm_rank;
+    problem.fused_a2a_peer_flag = handle->device_comm_peer_flags;
+
+    if(auto gate = validate_fused_a2a(handle, problem); gate != rocblaslt_status_success)
+        return gate;
+
+    if(fused_a2a_lacks_sdma_queues(problem))
+        return rocblaslt_status_invalid_value;
+#endif
+
     rocblaslt_status st = runContractionProblem(handle, algo, problem, gemmData);
 
     if(st == rocblaslt_status_success)
@@ -449,6 +463,21 @@ rocblaslt_status rocblaslt_gemm_create_cpp_impl(const rocblaslt_handle          
                                         effective_sm_count_target(handle, matmul_descr, nullptr),
                                         effective_uniform_summation_order(handle, matmul_descr)};
     problem.int4EncodingA = matmul_descr->int4_encoding_a_ext;
+
+#if HIPBLASLT_HAS_GEMM_A2A_FUSION
+    problem.fused_epilogue = matmul_descr->fused_epilogue;
+
+    // The all-to-all stage is available through hipblasLtMatmul only.
+    RocblasltFusedEpilogueInfo fused_info;
+    if(rocblaslt_resolve_fused_epilogue(problem.fused_epilogue, fused_info)
+       && fused_info.hasA2APrefix)
+    {
+        log_error(__func__, "fused all-to-all is not available through the extension GEMM API");
+        return rocblaslt_status_invalid_value;
+    }
+#endif
+
+
     return gemmCreate(problem, gemmData, gemmCount);
 }
 
