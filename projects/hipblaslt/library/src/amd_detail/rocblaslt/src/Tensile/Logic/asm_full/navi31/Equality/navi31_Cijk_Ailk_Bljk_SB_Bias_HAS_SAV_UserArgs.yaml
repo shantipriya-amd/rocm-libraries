@@ -160,7 +160,7 @@
     MacroTileB: 8
     MagicDivAlg: 2
     MatrixInstruction: []
-    MaxOccupancy: 40
+    MaxOccupancy: 64
     NoLdsWriteCode: false
     NoReject: false
     NoTailLoop: false
@@ -329,7 +329,7 @@
     MacroTileB: 16
     MagicDivAlg: 2
     MatrixInstruction: []
-    MaxOccupancy: 40
+    MaxOccupancy: 64
     NoLdsWriteCode: false
     NoReject: false
     NoTailLoop: false
@@ -498,7 +498,7 @@
     MacroTileB: 8
     MagicDivAlg: 2
     MatrixInstruction: []
-    MaxOccupancy: 40
+    MaxOccupancy: 64
     NoLdsWriteCode: false
     NoReject: false
     NoTailLoop: false
